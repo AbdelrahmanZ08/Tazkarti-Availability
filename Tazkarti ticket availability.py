@@ -22,12 +22,10 @@ WEBSITES = [
 CHECK_INTERVAL = 3
 RECIPIENT_USERNAME = "fagvju"  # Replace with the recipient's username
 
-
 async def fetch_website_content(session, url):
     async with session.get(url) as response:
         response.raise_for_status()
         return await response.text()
-
 
 def get_div_content_hash(html, selector):
     soup = BeautifulSoup(html, "html.parser")
@@ -36,10 +34,12 @@ def get_div_content_hash(html, selector):
         return hashlib.md5(div_content.get_text().strip().encode("utf-8")).hexdigest()
     return hashlib.md5(b"").hexdigest()
 
-
 async def send_telegram_message(client, recipient_username, message):
     await client.send_message(recipient_username, message)
 
+async def notify_startup(client, recipient_username):
+    startup_message = "السكريبت اشتغل لو حاجه جديده نزلت هيقولك (كلام ده مبعوت من السكريبت مش مني)"
+    await send_telegram_message(client, recipient_username, startup_message)
 
 async def monitor_websites(websites):
     last_hashes = {website["url"]: None for website in websites}
@@ -67,11 +67,10 @@ async def monitor_websites(websites):
 
         await asyncio.sleep(CHECK_INTERVAL)
 
-
 async def main():
     await client.start()
+    await notify_startup(client, RECIPIENT_USERNAME)  # Send the startup message
     await monitor_websites(WEBSITES)
-
 
 with client:
     client.loop.run_until_complete(main())
