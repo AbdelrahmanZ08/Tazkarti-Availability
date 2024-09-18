@@ -57,7 +57,7 @@ async def monitor_websites(websites):
                     if last_hashes[url] is None:
                         last_hashes[url] = current_hash
                     elif current_hash != last_hashes[url]:
-                        message = f"Content in div has changed on: {url}"
+                        message = f"فيه تذكرة جديده نزلت ادخل شوف الموقع: {url}"
                         print(message)
                         await send_telegram_message(client, RECIPIENT_USERNAME, message)
                         last_hashes[url] = current_hash
