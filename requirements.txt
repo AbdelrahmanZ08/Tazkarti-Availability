@@ -1,4 +1,6 @@
-aiohttp
+aiohttp==3.8.5
+beautifulsoup4==4.12.2
+urllib3==1.26.16
+hashlib
+webbrowser
 bs4
-python-telegram-bot
-asyncio
