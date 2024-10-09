@@ -1,11 +1,11 @@
 import hashlib
 import asyncio
-import webbrowser  # This opens the WhatsApp app with the message
+import webbrowser  # This will open the SMS app with the message ready to be sent
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 import urllib.parse
 
-# Replace this with the recipient's WhatsApp number
+# Replace this with the recipient's phone number
 recipient_number = "+21097542432"  # Phone number in international format (with country code)
 
 WEBSITES = [
@@ -29,17 +29,17 @@ def get_div_content_hash(html, selector):
         return hashlib.md5(div_content.get_text().strip().encode("utf-8")).hexdigest()
     return hashlib.md5(b"").hexdigest()
 
-def open_whatsapp(phone_number, message):
+def open_sms(phone_number, message):
     # Encode the message for URL formatting
     encoded_message = urllib.parse.quote(message)
-    # Create the WhatsApp URL scheme
-    whatsapp_url = f"https://wa.me/{phone_number[1:]}?text={encoded_message}"
-    # Open the URL to launch WhatsApp with the message ready to be sent
-    webbrowser.open(whatsapp_url)
+    # Create the SMS URI scheme to open the SMS app
+    sms_url = f"sms:{phone_number}?body={encoded_message}"
+    # Open the URL to launch the SMS app with the message ready to be sent
+    webbrowser.open(sms_url)
 
 async def notify_startup():
     startup_message = "The script has started. You will be notified if anything new is detected (automated message)."
-    open_whatsapp(recipient_number, startup_message)
+    open_sms(recipient_number, startup_message)
 
 async def monitor_websites(websites):
     last_hashes = {website["url"]: None for website in websites}
@@ -59,7 +59,7 @@ async def monitor_websites(websites):
                     elif current_hash != last_hashes[url]:
                         message = f"New ticket available, check the website: {url}"
                         print(message)
-                        open_whatsapp(recipient_number, message)
+                        open_sms(recipient_number, message)
                         last_hashes[url] = current_hash
 
                 except Exception as e:
