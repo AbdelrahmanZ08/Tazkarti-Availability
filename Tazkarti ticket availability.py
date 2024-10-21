@@ -21,11 +21,15 @@ WEBSITES = [
 
 CHECK_INTERVAL = 3
 RECIPIENT_USERNAME = "fagvju"  # Replace with the recipient's username
+REPEAT_COUNT = 10  # Number of times to repeat the message
+MESSAGE_DELAY = 7  # Delay between each message (in seconds)
+
 
 async def fetch_website_content(session, url):
     async with session.get(url) as response:
         response.raise_for_status()
         return await response.text()
+
 
 def get_div_content_hash(html, selector):
     soup = BeautifulSoup(html, "html.parser")
@@ -34,12 +38,22 @@ def get_div_content_hash(html, selector):
         return hashlib.md5(div_content.get_text().strip().encode("utf-8")).hexdigest()
     return hashlib.md5(b"").hexdigest()
 
-async def send_telegram_message(client, recipient_username, message):
-    await client.send_message(recipient_username, message)
+
+async def send_telegram_message(
+    client, recipient_username, message, repeat_count, delay
+):
+    for _ in range(repeat_count):
+        await client.send_message(recipient_username, message)
+        print(f"Message sent: {message}")
+        await asyncio.sleep(delay)  # Delay between messages
+
 
 async def notify_startup(client, recipient_username):
-    startup_message = "السكريبت اشتغل لو حاجه جديده نزلت هيقولك (كلام ده مبعوت من السكريبت مش مني)"
-    await send_telegram_message(client, recipient_username, startup_message)
+    startup_message = (
+        "السكريبت اشتغل لو حاجه جديده نزلت هيقولك (كلام ده مبعوت من السكريبت مش مني)"
+    )
+    await send_telegram_message(client, recipient_username, startup_message, 1, 0)
+
 
 async def monitor_websites(websites):
     last_hashes = {website["url"]: None for website in websites}
@@ -59,7 +73,15 @@ async def monitor_websites(websites):
                     elif current_hash != last_hashes[url]:
                         message = f"فيه تذكرة جديده نزلت ادخل شوف الموقع: {url}"
                         print(message)
-                        await send_telegram_message(client, RECIPIENT_USERNAME, message)
+                        # Send the message 5 times with 7 seconds delay
+                        await send_telegram_message(
+                            client,
+                            RECIPIENT_USERNAME,
+                            message,
+                            REPEAT_COUNT,
+                            MESSAGE_DELAY,
+                        )
+
                         last_hashes[url] = current_hash
 
                 except Exception as e:
@@ -67,10 +89,12 @@ async def monitor_websites(websites):
 
         await asyncio.sleep(CHECK_INTERVAL)
 
+
 async def main():
     await client.start()
     await notify_startup(client, RECIPIENT_USERNAME)  # Send the startup message
     await monitor_websites(WEBSITES)
+
 
 with client:
     client.loop.run_until_complete(main())
